@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
+import java.util.*;
 
 @WebServlet("/registro")
 public class FormServlet extends HttpServlet {
@@ -25,44 +25,89 @@ public class FormServlet extends HttpServlet {
         String[] roles = req.getParameterValues("roles");
 
         String idioma = req.getParameter("idioma");
-        String habilitar = req.getParameter("habilitar");
+        boolean habilitar = req.getParameter("habilitar") != null &&
+                req.getParameter("habilitar").equals("on");
         String secreto = req.getParameter("secreto");
 
-        try (PrintWriter out = resp.getWriter()) {
+        // Validaciones
+        Map<String, String> errores = new HashMap<>();
 
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("      <head>");
-            out.println("            <meta charset=\"UTF-8\">");
-            out.println("            <title>Resultado from</title>");
-            out.println("     </head>");
-            out.println("     <body>");
-            out.println("           <h1>Resultado form</h1>");
+        if (username == null || username.isBlank()) {
+            errores.put("username", "El username es requerido");
+        }
 
-            out.println("              <ul>");
-            out.println("                  <li>Username: " + username + "</li>");
-            out.println("                  <li>Password: " + password + "</li>");
-            out.println("                  <li>Email: " + email + "</li>");
-            out.println("                  <li>Pais: " + pais + "</li>");
-            out.println("                  <li>Lenguajes: <ul>");
-            Arrays.asList(lenguajes).forEach(lenguaje -> {
-                out.println("               <li>" + lenguaje + "</li>");
-            });
-            out.println("                  </ul></li>");
+        if (password == null || password.isBlank()) {
+            errores.put("password", "El password no puede ser vacio");
+        }
 
-            out.println("                  <li>Roles: <ul>");
-            Arrays.asList(roles).forEach(role -> {
-                out.println("               <li>" + role + "</li>");
-            });
-            out.println("                  </ul></li>");
+        if (email == null || !email.contains("@")) {
+            errores.put("email", "El email es requerido y debe tener un formato de correo.");
+        }
 
-            out.println("               <li> Idioma: " + idioma + "</li>");
-            out.println("               <li>Habilitado: " + habilitar + "</li>");
-            out.println("               <li>Secreto: " + secreto + "</li>");
+        if (pais == null || pais.equals("") || pais.equals(" ")) {
+            errores.put("pais", "El pais es requerido");
+        }
 
-            out.println("               </ul>");
-            out.println("      </body>");
-            out.println("</html>");
+        if (lenguajes == null || lenguajes.length == 0) {
+            errores.put("lenguajes", "Debe seleccionar al menos un tema");
+        }
+
+        if (roles == null || roles.length == 0) {
+            errores.put("roles", "Debe seleccionar al menos un role!");
+        }
+
+        if (idioma == null) {
+            errores.put("idioma", "Debe seleccionar un idioma!");
+        }
+
+        if (errores.isEmpty()) {
+            try (PrintWriter out = resp.getWriter()) {
+
+                out.println("<!DOCTYPE html>");
+                out.println("<html>");
+                out.println("      <head>");
+                out.println("            <meta charset=\"UTF-8\">");
+                out.println("            <title>Resultado from</title>");
+                out.println("     </head>");
+                out.println("     <body>");
+                out.println("           <h1>Resultado form</h1>");
+
+                out.println("              <ul>");
+
+                out.println("                  <li>Username: " + username + "</li>");
+                out.println("                  <li>Password: " + password + "</li>");
+                out.println("                  <li>Email: " + email + "</li>");
+                out.println("                  <li>Pais: " + pais + "</li>");
+                out.println("                  <li>Lenguajes: <ul>");
+                Arrays.asList(lenguajes).forEach(lenguaje -> {
+                    out.println("               <li>" + lenguaje + "</li>");
+                });
+                out.println("                  </ul></li>");
+
+                out.println("                  <li>Roles: <ul>");
+                Arrays.asList(roles).forEach(role -> {
+                    out.println("               <li>" + role + "</li>");
+                });
+                out.println("                  </ul></li>");
+
+                out.println("               <li> Idioma: " + idioma + "</li>");
+                out.println("               <li>Habilitado: " + habilitar + "</li>");
+                out.println("               <li>Secreto: " + secreto + "</li>");
+                out.println("               </ul>");
+                out.println("      </body>");
+                out.println("</html>");
+            }
+        } else {
+            //validaciones
+                /*errores.forEach(error -> {
+                    out.println("<li>" + error + "</li>");
+                });
+                out.println("<p><a href=\"/webapp-form/index.jsp\">volver</a></p>"); // para volver a la pagina anterior*/
+
+            //para que nos muestre el mensaje de error al costado del formulario
+            req.setAttribute("errores", errores);
+            getServletContext().getRequestDispatcher("/index.jsp").forward(req, resp);
+
         }
     }
 }
